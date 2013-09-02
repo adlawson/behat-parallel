@@ -1,0 +1,20 @@
+{
+    "name": "adlawson/behat-parallel",
+    "description": "Parallel Behat proceses",
+    "keywords": ["bdd", "behat", "parallel", "process", "testing"],
+    "version": "0.1.0",
+
+    "type": "library",
+    "license": "MIT",
+
+    "homepage": "http://github.com/adlawson/behat-parallel",
+
+    "authors": [
+        {
+            "name": "Andrew Lawson",
+            "homepage": "http://adlawson.com"
+        }
+    ],
+
+    "bin": ["bin/behat-parallel"]
+}

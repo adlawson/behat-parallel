@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# This file is part of Behat Parallel
+#
+# Copyright (c) 2013 Andrew Lawson <http://adlawson.com>
+#
+# For the full copyright and license information, please view the LICENSE
+# file that was distributed with this source code.
+#
+# @see  http://github.com/adlawson/behat-parallel/blob/master/LICENSE
+# @link http://github.com/adlawson/behat-parallel
+
+behat() {
+    local bin='./vendor/bin/behat'
+    local features='./features/*.feature'
+    local processes='4'
+    local defaults=($bin $features $processes)
+    local childargs=$(echo $@ | awk 'BEGIN {FS=" -- "}{print $2}')
+    local OPT=$(echo $@ | awk 'BEGIN {FS=" -- "}{print $1}')
+
+    prompthelp() {
+        help ${defaults[*]}
+        exit 0
+    }
+
+    while getopts ':-:b:c:f:p:h' OPT; do
+        case "$OPT" in
+            h) prompthelp;;
+            b) bin="$OPTARG";;
+            f) features="$OPTARG";;
+            p) processes="$OPTARG";;
+            -) [ $OPTIND -ge 1 ] && optind=$(expr $OPTIND - 1) || optind=$OPTIND
+                eval OPT="\$$optind"
+                OPTARG=$(echo $OPT | cut -d'=' -f2)
+                OPT=$(echo $OPT | cut -d'=' -f1)
+                if [ "$OPT" -ne "$OPTARG" ]; then
+                    case "$OPT" in
+                        --help) prompthelp;;
+                        --bin) bin="$OPTARG";;
+                        --features) features="$OPTARG";;
+                        --processes) processes="$OPTARG";;
+                    esac
+                fi
+                OPTIND=1;shift;;
+        esac
+    done
+
+    find -wholename $features -print0 | xargs -0 -n 1 -P $processes sh -c "\
+        $bin -f progress --stop-on-failure $childargs \$1" sh
+}
+
+help() {
+    cat <<EOF
+
+    Usage: behat-parallel [options] -- [behat options]
+
+    Options:
+
+        -b, --bin        Behat binary (default: $1)
+        -f, --features   Path to the features to run (default $2)
+        -h, --help       This help prompt
+        -p, --processes  Maximum parallel processes (default: $3)
+
+    Example:
+
+        behat-parallel --features=/path/to/features/**/*.feature -- --tags='@javascript'
+
+EOF
+}
+
+if [ "$BASH_SOURCE" == "$0" ]; then
+    behat $@
+    exit 0
+fi
